@@ -1,6 +1,6 @@
 package main
 
-import "johnhumphrys.dev/internal/wthr-acc-chkr/handlers"
+import "johnhumphrys.dev/internal/weather/handlers"
 
 func main() {
 	handlers.DoSomething()

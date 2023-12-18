@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jlaffaye/ftp"
-	"johnhumphrys.dev/internal/wthr-acc-chkr/handlers/bommodel"
+	"johnhumphrys.dev/internal/weather/handlers/bommodel"
 )
 
 const (
@@ -18,23 +18,29 @@ const (
 	ftpTimeout = 5 * time.Second
 )
 
-func CallWthrFtpSvc() []byte {
-	c, err := ftp.Dial("ftp.bom.gov.au:21", ftp.DialWithTimeout(ftpTimeout))
+func getXml() []byte {
+	ftpAddress := "ftp.bom.gov.au:21"
+	ftpUser := "anonymous"
+	ftpPw := "anonymous"
+	ftpDir := "anon/gen/fwo"
+	ftpFile := "IDV10450.xml"
+
+	c, err := ftp.Dial(ftpAddress, ftp.DialWithTimeout(ftpTimeout))
 	if err != nil {
 		log.Fatalf("Error connecting to FTP server: %v", err)
 	}
 
-	err = c.Login("anonymous", "anonymous")
+	err = c.Login(ftpUser, ftpPw)
 	if err != nil {
 		log.Fatalf("Error logging into FTP server: %v", err)
 	}
 
-	err = c.ChangeDir("anon/gen/fwo")
+	err = c.ChangeDir(ftpDir)
 	if err != nil {
 		log.Fatalf("Error changing directory: %v", err)
 	}
 
-	r, err := c.Retr("IDV10450.xml")
+	r, err := c.Retr(ftpFile)
 	if err != nil {
 		log.Fatalf("Error retrieving file: %v", err)
 	}
@@ -50,18 +56,18 @@ func CallWthrFtpSvc() []byte {
 }
 
 func DoSomething() {
-	data := CallWthrFtpSvc()
+	data := getXml()
 
-	var bom bommodel.Product
+	var wthrData bommodel.Product
 
-	err := xml.Unmarshal(data, &bom)
+	err := xml.Unmarshal(data, &wthrData)
 	if err != nil {
 		log.Fatalf("Error unmarshalling XML: %v", err)
 	}
 
 	var targetArea bommodel.Area
 
-	for _, area := range bom.Forecast.Area {
+	for _, area := range wthrData.Forecast.Area {
 		if area.AAC == MelbourneAAC {
 			targetArea = area
 			break
