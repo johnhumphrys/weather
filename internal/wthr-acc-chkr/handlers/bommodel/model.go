@@ -89,6 +89,8 @@ func (t *Time) UnmarshalXMLAttr(attr xml.Attr) error {
 	if err != nil {
 		return err
 	}
+
 	t.Time = parsedTime
+
 	return nil
 }
